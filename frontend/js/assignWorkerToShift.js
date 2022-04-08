@@ -15,12 +15,14 @@ function handleFormMsg(msg, display){
     }
 }
 
+// let id = localStorage.getItem("id")
+
 function handleAssignMent(event) {
     event.preventDefault()
     const myForm = event.target
     const myFormData = new FormData(myForm)
-    const method = myForm.getAttribute("method")
-    const url = `http://127.0.0.1:8000/api/add-worker-to-shift/`
+    const method = "PUT"
+    const url = `http://127.0.0.1:8000/api/add-worker-to-shift/${id}/`
     
     const xhr = new XMLHttpRequest()
     xhr.open(method, url)
@@ -33,8 +35,8 @@ function handleAssignMent(event) {
             myForm.reset()
         }else if(xhr.status === 404){
             console.log(xhr.status, xhr.response)
-            handleFormMsg(xhr.response, true)
-            alert(xhr.response)
+            handleFormMsg(xhr.response, false)
+            alert("404: Not found error")
         }else{
             console.log(xhr.status, xhr.response)
             alert("There was a server error, please try again.")

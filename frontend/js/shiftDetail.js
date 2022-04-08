@@ -1,12 +1,11 @@
 const shiftInfo = document.getElementById("shift-detail")
 const workersList = document.getElementById("workers-list")
 const selectWorkers = document.getElementById("id_select_workers")
-const shiftFormDetails = document.getElementById("shift-form-details")
 
 const getAvailableWorkers = () => {
     const xhr = new XMLHttpRequest()
     const method ="GET"
-    const url = "http://127.0.0.1:8000/api/workers-list/"
+    const url = "http://127.0.0.1:8000/api/worker/list/"
     const responseType = "json"
 
     xhr.responseType = responseType
@@ -52,12 +51,6 @@ const handleDetail = (id) => {
             shiftInfo.innerHTML = `
                 <h1>${shift.name}</h1>
                 <p>Duration: <b>${shift.start_time}</b> - <b>${shift.end_time}</b></p>
-            `
-            shiftFormDetails.innerHTML += `
-            <input type="hidden" name="id" value="${shift.id}">
-            <input type="hidden" name="name" value="${shift.name}">
-            <input type="hidden" name="start_time" value="${shift.start_time}">
-            <input type="hidden" name="end_time" value="${shift.end_time}">
             `
             let contentStr = ""
             if (shift.workers.length == 0){

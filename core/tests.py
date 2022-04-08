@@ -57,14 +57,14 @@ class WorkerTestCase(TestCase):
 
     def test_workers_list_api(self):
         client = self.get_client()
-        response = client.get('/api/workers-list/')
+        response = client.get('/api/worker/list/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 4)
     
     def test_create_worker_api(self):
         client = self.get_client()
         response = client.post(
-            '/api/create-worker/',
+            '/api/worker/create/',
             {
                 'first_name':'Ben',
                 'last_name':'Fray',
@@ -78,14 +78,14 @@ class WorkerTestCase(TestCase):
     
     def test_shifts_list_api(self):
         client = self.get_client()
-        response = client.get('/api/shifts-list/')
+        response = client.get('/api/shift/list/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.json()), 3)
     
     def test_create_shift_api(self):
         client = self.get_client()
         response = client.post(
-            '/api/create-shift/',
+            '/api/shift/create/',
             {
                 'name':'Shift Four',
                 'start_time':'16:00:00',
@@ -111,30 +111,19 @@ class WorkerTestCase(TestCase):
     def test_add_worker_to_shift_post(self):
         client = self.get_client()
         response = client.post(
-            '/api/add-worker-to-shift/',
+            '/api/add-worker-to-shift/1/',
             {
-                'id':'1',
-                'name':'First Shift',
-                'start_time':'00:00:00',
-                'end_time':'08:00:00',
                 'workers': ['1', '3']
             },
             format='json'
         )
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json().get("workers")), 2)
-        worker_name = response.json().get("workers")[0].get('first_name')
-        self.assertEqual(worker_name, "Jane")
+        self.assertEqual(response.status_code, 405)
 
     def test_add_worker_to_shift_put(self):
         client = self.get_client()
         response = client.put(
-            '/api/add-worker-to-shift/',
+            '/api/add-worker-to-shift/1/',
             {
-                'id':'1',
-                'name':'First Shift',
-                'start_time':'00:00:00',
-                'end_time':'08:00:00',
                 'workers': ['1', '3']
             },
             format='json'

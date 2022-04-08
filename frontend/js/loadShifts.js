@@ -4,7 +4,7 @@ let loader = document.querySelectorAll("#loader")
 function loadShifts(shiftElement){
     const xhr = new XMLHttpRequest()
     const method ="GET"
-    const url = "http://127.0.0.1:8000/api/shifts-list/"
+    const url = "http://127.0.0.1:8000/api/shift/list/"
     const responseType = "json"
 
     xhr.responseType = responseType

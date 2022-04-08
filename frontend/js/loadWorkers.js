@@ -2,7 +2,7 @@
 function loadWorkers(workersElement){
     const xhr = new XMLHttpRequest()
     const method ="GET"
-    const url = "http://127.0.0.1:8000/api/workers-list/"
+    const url = "http://127.0.0.1:8000/api/worker/list/"
     const responseType = "json"
 
     xhr.responseType = responseType

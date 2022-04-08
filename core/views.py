@@ -1,12 +1,12 @@
 from .models import Worker, Shift
-
+from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, UpdateAPIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from .serializers import WorkerSerializer, ShiftSerializer
+from .serializers import WorkerSerializer, ShiftSerializer, ShiftUpdateSerializer
 # Create your views here.
 
-@api_view(['GET'])
-def workers_list_api_view(request, *args, **kwargs):
+# Workers
+class WorkersListAPIView(ListAPIView):
     """
     METHODS ALLOWED: GET
     API endpoint: api/workers-list/
@@ -20,12 +20,10 @@ def workers_list_api_view(request, *args, **kwargs):
     
     Returns a serialized jsonresponse
     """
-    qs = Worker.objects.all().order_by("-id")
-    serializer = WorkerSerializer(qs, many=True)
-    return Response(serializer.data)
+    queryset = Worker.objects.order_by('-id')
+    serializer_class = WorkerSerializer
 
-@api_view(['POST'])
-def create_worker_api_view(request, *args, **kwargs):
+class WorkerCreateAPIView(CreateAPIView):
     """
         METHODS ALLOWED: POST
         API endpoint: api/create-worker/
@@ -38,16 +36,15 @@ def create_worker_api_view(request, *args, **kwargs):
 
         Returns the created object and a status code 201 if successful, else 400, 404, 500 depending on the error.
     """
-    serializer = WorkerSerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
+    queryset = Worker.objects.order_by('-id')
+    serializer_class = WorkerSerializer
+
+    def perform_create(self, serializer):
         serializer.save(is_available=True)
-        return Response(serializer.data, status=201)
-    return Response({}, status=400)
 
 
 # Shifts
-@api_view(['GET'])
-def shifts_list_api_view(request, *args, **kwargs):
+class ShiftListAPIView(ListAPIView):
     """
     METHODS ALLOWED: GET
     API endpoint: api/shifts-list/
@@ -61,15 +58,13 @@ def shifts_list_api_view(request, *args, **kwargs):
     
     Returns a serialized jsonresponse
     """
-    qs = Shift.objects.all().order_by("start_time")
-    serializer = ShiftSerializer(qs, many=True)
-    return Response(serializer.data)
+    queryset = Shift.objects.order_by('start_time')
+    serializer_class = ShiftSerializer
 
-@api_view(['POST'])
-def create_shift_api_view(request, *args, **kwargs):
+class ShiftCreateAPIView(CreateAPIView):
     """
         METHODS ALLOWED: POST
-        API endpoint: api/create-shift/
+        API endpoint: api/shift/create/
 
         Creates a new shift object. The following data is mandatory:
             - name -> string
@@ -80,72 +75,47 @@ def create_shift_api_view(request, *args, **kwargs):
 
         Returns the created object and a status code 201 if successful, else 400, 404, 500 depending on the error.
     """
-    serializer = ShiftSerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
-        serializer.save()
-        return Response(serializer.data, status=201)
-    return Response({}, status=400)
+    queryset = Shift.objects.all()
+    serializer_class = ShiftSerializer
 
-@api_view(["GET"])
-def shift_detail_api_view(request, shift_id, *args, **kwargs):
+class ShiftRetrieveAPIView(RetrieveAPIView):
     """
         METHODS ALLOWED: GET
-        API endpoint: api/shift/<int:shift_id>/
+        API endpoint: api/shift/<int:pk>/
 
         Gets the shift object that matches the shift_id. It returns the shift object if it finds it.
 
         Returns the created object and a status code 201 if successful, else 404 not found error.
     """
-    qs = Shift.objects.filter(id=shift_id)
-    if not qs.exists():
-        return Response({}, status=404)
-    
-    obj = qs.first()
-    serializer = ShiftSerializer(obj)
+    queryset = Shift.objects.all()
+    serializer_class = ShiftSerializer
 
-    return Response(serializer.data, status=200)
+class ShiftUpdateAPIView(UpdateAPIView):
+    """The request body should be a "application/json" encoded object, containing the workers id list."""
+    queryset = Shift.objects.order_by('start_time')
+    serializer_class = ShiftUpdateSerializer
 
-@api_view(["POST", "PUT"])
-def add_worker_to_shift_api_view(request, *args, **kwargs):
-    """
-        METHODS ALLOWED: POST, PUT
-        API endpoint: api/add-worker-to-shift/
-
-        Updates a shift object. The following data is required from the request body:
-            A shift object containing:
-                - name -> string
-                - start_time -> time field
-                - end_time -> time field
-                - workers -> many to many field to the Worker objects. 
-        Uses the data provided to update the shift and the workers.
-
-        Returns the updated object and a status code 200 if successful, else 400, 404, 500 depending on the error.
-    """
-    serializer = ShiftSerializer(data=request.data)
-    if serializer.is_valid(raise_exception=True):
-        data = request.data
-        if "id" not in data or "workers" not in data:
-            return Response({
-                "error":"invalid data provided. Requires the shift data: id, start_time, end_time, workers"
-                }, status=400)
-
-        shift_id = data['id']
-        workers = data.get('workers')
-        shift_qs = Shift.objects.filter(id=int(shift_id))
-        # return an error if the shift with that id doesn't exists
-        if not shift_qs.exists():
-            return Response({'error':'shift not found.'}, status=404)
-
-        # now update the shift
-        shift = shift_qs.first()
+    def update(self, request, *args, **kwargs):
+        shift_instance = self.get_object()
+        workers = dict(request.data).get("workers")
         for i in workers:
             worker_id = int(i)
             worker = Worker.objects.get(id=worker_id)
             if worker.is_available:
-                shift.workers.add(worker.id)
-            shift.save()
+                shift_instance.workers.add(worker.id)
+            shift_instance.save()
             worker.is_available = False
             worker.save()
-        serialize_obj = ShiftSerializer(shift)
-        return Response(serialize_obj.data, status=200)
-    return Response({}, status=400)
+            
+        serializer = self.get_serializer(shift_instance)
+        return Response(serializer.data)
+
+
+
+# handle auto job
+from celery.schedules import crontab
+from celery.task import periodic_task
+
+@periodic_task(run_every=crontab(hour=22, minute=42, day_of_week="fri"))
+def every_monday_morning():
+    print("This is run every Monday morning at 7:30")
