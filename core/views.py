@@ -1,6 +1,5 @@
 from .models import Worker, Shift
 from rest_framework.generics import ListAPIView, CreateAPIView, RetrieveAPIView, UpdateAPIView
-from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from .serializers import WorkerSerializer, ShiftSerializer, ShiftUpdateSerializer
 # Create your views here.
@@ -107,15 +106,6 @@ class ShiftUpdateAPIView(UpdateAPIView):
             worker.is_available = False
             worker.save()
             
-        serializer = self.get_serializer(shift_instance)
+        serializer = ShiftSerializer(shift_instance)
         return Response(serializer.data)
 
-
-
-# handle auto job
-from celery.schedules import crontab
-from celery.task import periodic_task
-
-@periodic_task(run_every=crontab(hour=22, minute=42, day_of_week="fri"))
-def every_monday_morning():
-    print("This is run every Monday morning at 7:30")
