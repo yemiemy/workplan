@@ -40,7 +40,14 @@ INSTALLED_APPS = [
     'core',
     'rest_framework',
     'drf_yasg',
-    'corsheaders'
+    'corsheaders',
+
+    'django_cron'
+]
+
+CRON_CLASSES = [
+    "core.cron.WorkerUpdateCron",
+    # ...
 ]
 
 MIDDLEWARE = [
