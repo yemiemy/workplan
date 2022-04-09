@@ -10,9 +10,9 @@ It tackles the following:
 ## API Schema and Documentation
 The API schema and details can be viewed at the url:
 
-[api schema]('http://127.0.0.1:8000/')
+[api schema](http://127.0.0.1:8000/)
 
 ## Documentation
 You can view the full documentation about the project at this url:
 
-[documentation]('http://127.0.0.1:8000/docs/')
+[documentation](http://127.0.0.1:8000/docs/)
