@@ -33,3 +33,7 @@ urlpatterns = [
     path('redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
    
 ]
+
+admin.site.site_header = "WorkPlan Admin"
+admin.site.site_title = "WorkPlan Admin Portal"
+admin.site.index_title = "Welcome to WorkPlan Portal"
